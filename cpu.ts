@@ -72,7 +72,7 @@ namespace cpu {
         isDrawing: false
     })
 
-    export const loadProgram = (program: number[]) => {
+    export const loadProgram = (program: Buffer) => {
         for (let i = 0; i < program.length; i++)
             state.memory[i + 0x200] = program[i]
     }
@@ -93,10 +93,10 @@ namespace cpu {
     const NN: FOc = oc => oc & 0x00ff
     const NNN: FOc = oc => oc & 0x0fff
 
-    const plus = (a: any) => (typeof a === "number" ? a : a ? 1 : 0)
+    // const plus = (a: any) => (typeof a === "number" ? a : a ? 1 : 0)
 
     type FCalcVf = (vx: number, vy: number) => boolean | number
-    const setVf = (calcVf: FCalcVf) => (oc: number) => (state.V[0xf] = plus(calcVf(Vx(oc), Vy(oc))))
+    const setVf = (calcVf: FCalcVf) => (oc: number) => (state.V[0xf] = 0 + (calcVf(Vx(oc), Vy(oc)) as number))
 
     type FCalcVx = (vx: number, vy: number) => number
     const setVx = (calcVx: FCalcVx) => (oc: number) => {
