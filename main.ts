@@ -8,6 +8,7 @@ namespace chip8 {
         cpu.state.isDrawing = false
     }
 
+
     export function initKeys() {
 
         controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
