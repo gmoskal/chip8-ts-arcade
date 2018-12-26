@@ -1,29 +1,64 @@
+namespace chip8 {
+    scene.setBackgroundColor(1)
 
-const programArray = hex`a2b423e622b67001d0113025120671ffd011601ad01160253100120ec4704470121cc303601e6103225cf515d0143f01123cd01471ffd0142340121ce7a12272e8a12284e9a12296e29e12506600f615f6073600123cd0147101122aa2c4f41e660043016604430266084303660cf61e00eed01470ff23343f0100eed0147001233400eed014700123343f0100eed01470ff233400eed014730143046300225c23343f0100eed01473ff43ff6303225c233400ee8000670568066904611f6510620700ee40e0000040c0400000e04000406040004040600020e00000c040400000e080004040c00000e020006040400080e0000040c08000c060000040c08000c060000080c040000060c00080c040000060c000c0c00000c0c00000c0c00000c0c000004040404000f000004040404000f00000d014663576ff3600133800eea2b48c103c1e7c013c1e7c013c1e7c01235e4b0a237291c000ee71011350601b6b00d0113f007b01d01170013025136200ee601bd0117001302513748e108de07eff601b6b00d0e13f001390d0e11394d0d17b017001302513864b0013a67dff7eff3d01138223c03f0123c07a0123c080a06d0780d2400475fe4502650400eea700f255a804fa33f265f0296d326e00dde57d05f129dde57d05f229dde5a700f265a2b400ee6a00601900ee3723`
-// const programArray: number[] = []
-// Object.keys(program).forEach(k => programArray.push(program[k]));
+    const draw = () => {
+        //if (!cpu.state.isDrawing) return
+        // let im = cpu.state.screen.doubled()
+        screen.drawImage(cpu.state.screen, 15, 30)
+        cpu.state.isDrawing = false
+    }
+
+    export function initKeys() {
+
+        controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
+            const i = keys.indexOf("w")
+            if (i !== -1) cpu.state.keys[i] = true
+        })
+
+        controller.left.onEvent(ControllerButtonEvent.Released, function () {
+            const i = keys.indexOf("w")
+            if (i !== -1) cpu.state.keys[i] = false
+        })
+
+        controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
+            const i = keys.indexOf("e")
+            if (i !== -1) cpu.state.keys[i] = true
+        })
+
+        controller.right.onEvent(ControllerButtonEvent.Released, function () {
+            const i = keys.indexOf("e")
+            if (i !== -1) cpu.state.keys[i] = false
+        })
 
 
-const draw = () => {
-    //if (!cpu.state.isDrawing) return
+        controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
+            const i = keys.indexOf("q")
+            if (i !== -1) cpu.state.keys[i] = true
+        })
 
-    scene.setBackgroundColor(0)
-    const im = image.create(width, height)
+        controller.up.onEvent(ControllerButtonEvent.Released, function () {
+            const i = keys.indexOf("q")
+            if (i !== -1) cpu.state.keys[i] = false
+        })
 
-    cpu.state.screen.forEach((p, index) => {
-        const y = Math.floor(index / width)
-        const x = Math.floor(index - width * y)
-        screen.setPixel(x, y, p ? 10 : 0)
-    })
-    cpu.state.isDrawing = false
+    }
+
+    export function init(programArray: Buffer) {
+
+        cpu.init({})
+        cpu.loadProgram(programArray)
+        let ticks = 0
+        game.onPaint(function () {
+            cpu.runNextInstruction()
+            cpu.runNextInstruction()
+            cpu.runNextInstruction()
+            cpu.runNextInstruction()
+            cpu.runNextInstruction()
+            cpu.runNextInstruction()
+            draw()
+            if (++ticks % 1 === 0 && cpu.state.delayTimer > 0)
+                cpu.state.delayTimer--
+        })
+
+    }
 }
-
-cpu.init({})
-cpu.loadProgram(programArray as any)
-let ticks = 0
-game.onPaint(function () {
-    cpu.runNextInstruction()
-    draw()
-    if (++ticks % 2 === 0 && cpu.state.delayTimer > 0)
-        cpu.state.delayTimer--
-})

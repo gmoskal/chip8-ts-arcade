@@ -8,9 +8,9 @@ type State = {
     V: number[],
     stack: number[],
     memory: Buffer,
-    screen: number[],
+    screen: Image,
     keys: any,
-    delayTimer:number,
+    delayTimer: number,
     soundTimer: number,
     isDrawing: boolean
 }
@@ -49,8 +49,8 @@ const height = 32
 namespace cpu {
 
     const getArray = (size: number): number[] => {
-        let res:number[] = []
-        for (let i =0; i< size; i++)
+        let res: number[] = []
+        for (let i = 0; i < size; i++)
             res.push(0)
         return res
     }
@@ -65,7 +65,7 @@ namespace cpu {
         V: getArray(16),
         stack: getArray(16),
         memory: control.createBuffer(0x1000),
-        screen: getArray(width * height),
+        screen: image.create(width * 2, height * 2),
         keys: keysMap,
         delayTimer: 0,
         soundTimer: 0,
@@ -77,10 +77,10 @@ namespace cpu {
             state.memory[i + 0x200] = program[i]
     }
 
-    export let state:  State;//ReturnType<typeof getInitialState>
+    export let state: State;//ReturnType<typeof getInitialState>
     export const init = (delta: any) => {
         state = getInitialState()
-        Object.keys(delta).forEach(key =>( state as any)[key] = delta[key])
+        Object.keys(delta).forEach(key => (state as any)[key] = delta[key])
         for (let i = 0; i < chars.length; i++) state.memory[i] = chars[i]
     }
 
@@ -117,9 +117,14 @@ namespace cpu {
     const updatePixel = (x: number, y: number) => {
         x += x < 0 ? width : x > width ? -width : 0
         y += y < 0 ? height : y > height ? -height : 0
-        const i = x + y * width
-        state.screen[i] ^= 1
-        return !state.screen[i]
+        x *= 2
+        y *= 2
+        let p = state.screen.getPixel(x, y)
+        state.screen.setPixel(x, y, p ? 0 : 10)
+        state.screen.setPixel(x + 1, y, p ? 0 : 10)
+        state.screen.setPixel(x, y + 1, p ? 0 : 10)
+        state.screen.setPixel(x + 1, y + 1, p ? 0 : 10)
+        return p == 0 ? 0 : 1
     }
 
     const draw = (oc: number) => {
@@ -157,8 +162,7 @@ namespace cpu {
             case 0x0000:
                 switch (oc) {
                     case 0x00e0:
-                        for (let i = 0; i < state.screen.length; i++)
-                            state.screen[i] = 0
+                        state.screen.fill(0)
                         break
                     case 0x00ee:
                         state.sp = state.sp - 1
@@ -171,7 +175,7 @@ namespace cpu {
                 return null
             case 0x2000: // NNN(23e6) => 3e6
                 state.stack[state.sp] = state.pc
-                state.sp = state.sp+1 
+                state.sp = state.sp + 1
                 state.pc = NNN(oc)
                 return null
 
